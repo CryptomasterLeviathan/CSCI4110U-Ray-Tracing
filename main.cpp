@@ -6,6 +6,7 @@
 #include <GL/glut.h>
 #include <GL/gl.h>
 
+#include "Scene.h"
 #include "Ray.h"
 #include "Sphere.h"
 #include "Plane.h"
@@ -18,43 +19,21 @@ int resolutionY = 500;
 
 Colour* raster;
 
-std::vector<Sphere> scene;
-
-Material yellowMaterial(COLOUR_YELLOW, 0.5f, 0.5f, 80.0f);
-Vector3 sphere1Centre(0.5f, 0.2f, 0.25f);
-Sphere sphere1(sphere1Centre, 0.2, yellowMaterial);
-
-Material redMaterial(COLOUR_RED, 0.2f, 0.8f, 200.0f);
-Vector3 sphere2Centre(0.2f, 0.15f, 0.6f);
-Sphere sphere2(sphere2Centre, 0.15f, redMaterial);
-
-Material blueMaterial(COLOUR_BLUE, 0.8f, 0.2f, 5.0f);
-Vector3 sphere3Centre(0.8f, 0.1f, 0.75f);
-Sphere sphere3(sphere3Centre, 0.1f, blueMaterial);
-
-Material lightGrayMaterial(COLOUR_LIGHT_GRAY, 0.5f, 0.5f, 100.0f);
-Vector3 planeOrigin(0.0f, 0.0f, 0.0f);
-Vector3 planeNormal(0.0f, 1.0f, 0.0f);
-Plane ground(planeOrigin, planeNormal, lightGrayMaterial);
-
-Vector3 eyeLocation(0.5f, 0.5f, -10.0f);
-
-Vector3 lightPosition(0.5f, 10.0f, -2.0f);
-Colour lightColour(1.0f, 1.0f, 1.0f, 1.0f);
+Scene* scene;
 
 #include <chrono>
 
 std::chrono::high_resolution_clock::time_point lastFrameTime = std::chrono::high_resolution_clock::now();
-float originalLightZ = lightPosition.z;
-float originalLightX = lightPosition.x;
+//float originalLightZ = lightPosition.z;
+//float originalLightX = lightPosition.x;
 
 void update(void) {
 	std::chrono::high_resolution_clock::time_point frameTime = std::chrono::high_resolution_clock::now();
 	std::chrono::duration<double> elapsedTime = frameTime - lastFrameTime;
 	float deltaT = elapsedTime.count();
 
-	lightPosition.z = originalLightZ + sinf(deltaT);
-	lightPosition.x = originalLightX + sinf(deltaT);
+	//lightPosition.z = originalLightZ + sinf(deltaT);
+	//lightPosition.x = originalLightX + sinf(deltaT);
 
 	// clear the raster
 	for (int y = 0; y < resolutionY; y++) {
@@ -75,32 +54,7 @@ void update(void) {
 			pixelLocation.y = ((float)y + 0.5f) * stepSizeY;
 			pixelLocation.z = -5.0f;
 
-			Vector3 direction = pixelLocation - eyeLocation;
-			direction.normalize();
-			Ray ray(eyeLocation, direction);
-
-			// see if it intersects with any of the objects in our scene
-			float minT = ground.intersectionPoint(ray);
-
-			if (!std::isnan(minT)) {
-				if (minT < 0.0f) {
-					minT = NAN;
-				} else {
-					raster[y * resolutionX + x] = ground.calculateShading(lightPosition, lightColour, ray, minT);
-				}
-			}
-
-			for (unsigned int i = 0; i < scene.size(); i++) {
-				Sphere sphere = scene.at(i);
-				float t = sphere.intersectionPoint(ray);
-				if (!std::isnan(t) && t > 0.0f) {
-					if (std::isnan(minT) || t < minT) {
-						minT = t;
-						//raster[y * resolutionX + x] = sphere.material.colour;
-						raster[y * resolutionX + x] = sphere.calculateShading(lightPosition, lightColour, ray, t);
-					}
-				}
-			}
+			raster[y * resolutionX + x] = scene->Trace(pixelLocation);
 		}
 	}
 
@@ -141,9 +95,7 @@ int main(int argc, char *argv[]) {
 	glutIdleFunc(update);
 	glutDisplayFunc(display);
 
-	scene.push_back(sphere1);
-	scene.push_back(sphere2);
-	scene.push_back(sphere3);
+	scene = new Scene();
 
 	raster = new Colour[resolutionX * resolutionY];
 
