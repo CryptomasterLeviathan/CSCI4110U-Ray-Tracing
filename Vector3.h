@@ -15,6 +15,7 @@ public:
 	void normalize();
 
 	float dot(Vector3 other);
+	Vector3 cross(Vector3 other);
 };
 
 #endif

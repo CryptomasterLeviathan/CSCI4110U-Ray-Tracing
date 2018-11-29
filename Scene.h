@@ -5,8 +5,10 @@
 #include <cmath>
 
 // TODO: Change this to Object.h when I create that class
+#include "Primitive.h"
 #include "Sphere.h"
 #include "Plane.h"
+#include "Triangle.h"
 
 #include "Ray.h"
 #include "Vector3.h"
@@ -16,7 +18,7 @@
 
 class Scene {
 	Vector3 eyeLocation;
-	std::vector<Sphere> objects;
+	std::vector<Primitive*> objects;
 
 	// TODO: Support multiple lights
 	Vector3 lightPosition;
